@@ -1,0 +1,133 @@
+<html>
+    <head>
+        <title>Carte avec GeoJSON</title>
+        <link rel="stylesheet" href="leaflet.css">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+        <script src="leaflet.js"></script>
+        <script src="parcelles.geojson" type="text/javascript"></script>
+        <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+        
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            /* Styles pour le titre avec animation */
+            h1 {
+                margin: 20px;
+                color: #333;
+                animation: pulse 10s infinite; /* Animation de pulsation répétée */
+            }
+            @keyframes pulse {
+                0%, 100% {
+                    transform: scale(1); /* Taille normale */
+                    color: #333; /* Couleur normale */
+                }
+                50% {
+                    transform: scale(1.1); /* Agrandissement */
+                    color: #21618c; /* Couleur au centre de l'animation */
+                }
+            }
+            /* Styles de la barre de navigation */
+            .navbar {
+                width: 100%;
+                background-color: #7fb3d5;
+                overflow: hidden;
+                display: flex;
+                justify-content: center;
+            }
+            .navbar a {
+                padding: 14px 20px;
+                color: white;
+                text-decoration: none;
+                text-align: center;
+                transition: background-color 0.3s;
+            }
+            .navbar a:hover {
+                background-color: #575757;
+            }
+            #map {
+                width: 1100px;
+                height: 500px;
+                border: 2px solid #ccc;
+                border-radius: 8px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+            .leaflet-popup {
+                background-color: #fff;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+            .leaflet-popup-content {
+                font-size: 14px;
+                color: #555;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Barre de navigation -->
+        <div class="navbar">
+            <a href="#accueil">Accueil</a>
+            <a href="#actualites">Actualités</a>
+            <a href="#menu">Menu</a>
+            <a href="#services">Services</a>
+            <a href="#contacts">Contacts</a>
+        </div>
+        
+        <h1>Etat parcellaire d'une region de Guelmim</h1>
+        <div id="map"></div>
+        <script>
+            var map = L.map('map').setView([28.975064227026063, -10.0699099], 13);
+
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            
+            function onEachFeature(feature, layer) {
+                if (feature.properties) {
+                    var popupContent = '<strong>Informations sur la parcelle :</strong><br>';
+                    for (var key in feature.properties) {
+                        popupContent += key + ': ' + feature.properties[key] + '<br>';
+                    }
+                    layer.bindPopup(popupContent);
+                }
+            }
+
+            function style(feature) {
+                return {
+                    fillColor: '#eb984e ',
+                    weight: 1,
+                    opacity: 1,
+                    color: 'white',
+                    dashArray: '3',
+                    fillOpacity: 0.7
+                };
+            }
+
+            L.geoJson(parcelles, {
+                style: style,
+                onEachFeature: onEachFeature
+            }).addTo(map);
+            // Ajout de l'échelle
+            L.control.scale().addTo(map);
+            var parcellesLayer = L.geoJSON(parcelles)
+        
+            var geocoder = L.Control.geocoder({
+                defaultMarkGeocode: false
+            }).on('markgeocode', function(e) {
+                var Reference = e.geocode.name; // Supposons que le nom soit la référence
+                var parcelleTrouvee = parcellesLayer.getLayers().find(layer => layer.ref === Reference);
+                
+                if (parcelleTrouvee) {
+                    // Colorer la parcelle trouvée
+                    parcelleTrouvee.setStyle({ color: 'red' }); // Changez la couleur selon vos besoins
+                    map.fitBounds(parcelleTrouvee.getBounds()); // Ajustez la vue à la parcelle
+                } else {
+                    alert("Aucune parcelle trouvée avec cette référence.");
+                }
+            }).addTo(map);
+        </script>
+    </body>
+</html>
